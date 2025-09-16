@@ -79,7 +79,7 @@ class AthenaSQLHook(AwsBaseHook, DbApiHook):
         self.assume_role_kwargs = kwargs.pop("assume_role_kwargs", None)
         self.aws_session_token = kwargs.pop("aws_session_token", None)
         self.endpoint_url = kwargs.pop("endpoint_url", None)
-        
+
         super().__init__(*args, **kwargs)
         self.athena_conn_id = athena_conn_id
 
@@ -190,7 +190,7 @@ class AthenaSQLHook(AwsBaseHook, DbApiHook):
             "session": self.get_session(region_name=conn_params["region_name"]),
             **self.conn.extra_dejson,
         }
-        
+
         # Override with hook parameters if they were provided
         if self.s3_staging_dir is not None:
             conn_kwargs["s3_staging_dir"] = self.s3_staging_dir
@@ -210,7 +210,7 @@ class AthenaSQLHook(AwsBaseHook, DbApiHook):
             conn_kwargs["aws_session_token"] = self.aws_session_token
         if self.endpoint_url is not None:
             conn_kwargs["endpoint_url"] = self.endpoint_url
-        
+
         # Keep overrides consistent with _get_conn_params/get_uri
         if getattr(self, "driver", None) is not None:
             conn_kwargs["driver"] = self.driver
