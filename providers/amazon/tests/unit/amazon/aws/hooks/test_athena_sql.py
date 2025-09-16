@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 
@@ -214,11 +215,11 @@ class TestAthenaSQLHookConn:
         assert call_args["work_group"] == "test-workgroup"
 
     def test_sql_value_check_operator_compatibility(self):
-        """Test that AthenaSQLHook works with SQLValueCheckOperator (reproduces issue #55678)."""
+        """Test that AthenaSQLHook works with SQLValueCheckOperator."""
         from airflow.providers.common.sql.operators.sql import SQLValueCheckOperator
         from unittest.mock import patch
         
-        # Mock Athena connection with s3_staging_dir in extra (as described in the issue)
+        # Mock Athena connection with s3_staging_dir in extra
         athena_conn = Connection(
             conn_id="athena_conn",
             conn_type="athena",
@@ -241,3 +242,37 @@ class TestAthenaSQLHookConn:
             assert operator.sql == "SELECT TRUE"
             assert operator.pass_value == "True"
             assert operator.conn_id == "athena_conn"
+
+    @patch("airflow.providers.amazon.aws.hooks.athena_sql.pyathena.connect")
+    def test_hook_params_override_extras(connect_mock):
+        """
+        When both connection extras and hook_params provide values, hook_params should win.
+        """
+        # Arrange: simulate extras on the connection
+        extras = {
+            "s3_staging_dir": "s3://from-extra/",
+            "work_group": "wg-extra",
+            "aws_domain": "amazonaws.com",
+            "driver": "rest",
+        }
+        hook = AthenaSQLHook(
+            aws_conn_id=None,
+            hook_params={
+                "s3_staging_dir": "s3://from-params/",
+                "work_group": "wg-params",
+                "aws_domain": "amazonaws.com.cn",
+                "driver": "rest",
+            },
+        )
+        # Inject a fake conn object with extra_dejson
+        hook.conn = type("C", (), {"extra_dejson": extras})()
+
+        # Act
+        hook.get_conn()
+
+        # Assert: pyathena.connect received values from hook_params (not extras)
+        sent = connect_mock.call_args.kwargs
+        assert sent["s3_staging_dir"] == "s3://from-params/"
+        assert sent["work_group"] == "wg-params"
+        assert sent["aws_domain"] == "amazonaws.com.cn"
+        assert sent["driver"] == "rest"
