@@ -17,9 +17,8 @@
 # under the License.
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
+from datetime import datetime
 
 from airflow import DAG
 
@@ -44,7 +43,7 @@ class TestDAGTagValidation:
                 start_date=datetime(2021, 1, 1),
                 tags=["a" * 101]
             )
-
+        
         error_msg = str(exc_info.value)
         assert "101 characters long" in error_msg
         assert "maximum limit of 100 characters" in error_msg
@@ -57,7 +56,7 @@ class TestDAGTagValidation:
                 start_date=datetime(2021, 1, 1),
                 tags=["short", "a" * 101, "another_short"]
             )
-
+        
         error_msg = str(exc_info.value)
         assert "101 characters long" in error_msg
         assert "maximum limit of 100 characters" in error_msg
@@ -71,7 +70,7 @@ class TestDAGTagValidation:
                 start_date=datetime(2021, 1, 1),
                 tags=[long_tag]
             )
-
+        
         error_msg = str(exc_info.value)
         # Should show first 30 chars + "..."
         assert "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..." in error_msg
