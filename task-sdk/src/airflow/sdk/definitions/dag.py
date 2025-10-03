@@ -561,10 +561,10 @@ class DAG:
         if tags:
             for tag in tags:
                 if len(tag) > TAG_MAX_LEN:
-                    from airflow.exceptions import AirflowException
+                    
                     # Trim very long tag previews to keep error messages manageable
                     tag_preview = tag[:30] + "..." if len(tag) > 30 else tag
-                    raise AirflowException(
+                    raise ValueError(
                         f"DAG tag '{tag_preview}' is {len(tag)} characters long, "
                         f"exceeding the maximum limit of {TAG_MAX_LEN} characters"
                     )
